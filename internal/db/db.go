@@ -9,12 +9,16 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-//go:embed migrations/*.sql
-var defaultMigrationsFS embed.FS
-var tagDB *TagDB
+const (
+	defaultMigrationsDir    = "migrations"
+	defaultConnectionString = ":memory:"
+)
 
-const defaultMigrationsDir = "migrations"
-const defaultConnectionString = ":memory:"
+var (
+	//go:embed migrations/*.sql
+	defaultMigrationsFS embed.FS
+	tagDB               *TagDB
+)
 
 type TagDB struct {
 	client           *sql.DB
