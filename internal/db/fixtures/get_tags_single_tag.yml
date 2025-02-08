@@ -1,0 +1,5 @@
+# get_tags_single_tag.yml
+tags:
+  - id: 1
+    name: foo
+    description: a foo
