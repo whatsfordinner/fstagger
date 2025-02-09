@@ -80,6 +80,11 @@ func TestTagDBAddTags(t *testing.T) {
 			},
 			[]tags.Tag{
 				{
+					Id:          1,
+					Name:        "foo",
+					Description: "a foo",
+				},
+				{
 					Id:          2,
 					Name:        "bar",
 					Description: "a bar",
@@ -167,7 +172,136 @@ func TestTagDBAddTags(t *testing.T) {
 	}
 }
 
-func TestTagDBDeleteTags(t *testing.T) { t.Fatal("test not implemented") }
+func TestTagDBDeleteTags(t *testing.T) {
+	testMap := map[string]struct {
+		shouldErr bool
+		input     []tags.Tag
+		expect    []tags.Tag
+	}{
+		"delete nothing": {
+			false,
+			[]tags.Tag{},
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "foo",
+					Description: "a foo",
+				},
+				{
+					Id:          2,
+					Name:        "bar",
+					Description: "a bar",
+				},
+				{
+					Id:          3,
+					Name:        "baz",
+					Description: "a baz",
+				},
+			},
+		},
+		"delete something that doesn't exist": {
+			false,
+			[]tags.Tag{
+				{
+					Id:          4,
+					Name:        "qux",
+					Description: "a qux",
+				},
+			},
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "foo",
+					Description: "a foo",
+				},
+				{
+					Id:          2,
+					Name:        "bar",
+					Description: "a bar",
+				},
+				{
+					Id:          3,
+					Name:        "baz",
+					Description: "a baz",
+				},
+			},
+		},
+		"delete one thing": {
+			false,
+			[]tags.Tag{
+				{
+					Id:          2,
+					Name:        "bar",
+					Description: "a bar",
+				},
+			},
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "foo",
+					Description: "a foo",
+				},
+				{
+					Id:          3,
+					Name:        "baz",
+					Description: "a baz",
+				},
+			},
+		},
+		"delete many things": {
+			false,
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "foo",
+					Description: "a foo",
+				},
+				{
+					Id:          2,
+					Name:        "bar",
+					Description: "a bar",
+				},
+				{
+					Id:          3,
+					Name:        "baz",
+					Description: "a baz",
+				},
+			},
+			[]tags.Tag{},
+		},
+	}
+
+	for testName, testData := range testMap {
+		t.Run(testName, func(t *testing.T) {
+			testDB, teardown := setupDB(t, []string{"fixtures/delete_tags.yml"})
+			defer teardown()
+
+			err := testDB.DeleteTags(context.Background(), testData.input)
+
+			if err == nil && testData.shouldErr {
+				t.Fatal("Expected error but got no error")
+			}
+
+			if err != nil && !testData.shouldErr {
+				t.Fatalf("Expected no error but got: %s", err.Error())
+			}
+
+			res, err := testDB.GetTags(context.Background())
+			if err != nil {
+				t.Fatalf("Error retrieving remaining tags: %s", err.Error())
+			}
+
+			if !reflect.DeepEqual(res, testData.expect) {
+				t.Fatalf(
+					"Result did not match expectation\nResult: %+v\nExpected: %+v",
+					res,
+					testData.expect,
+				)
+			}
+		})
+	}
+}
+
 func TestTagDBUpdateTags(t *testing.T) { t.Fatal("test not implemented") }
 
 func TestTagDBGetTags(t *testing.T) {
@@ -223,6 +357,65 @@ func TestTagDBGetTags(t *testing.T) {
 
 			if err != nil && !testData.shouldErr {
 				t.Fatalf("Expected no error but got: %s", err.Error())
+			}
+
+			if !reflect.DeepEqual(res, testData.expect) {
+				t.Fatalf(
+					"Result did not match expectation\nResult: %+v\nExpected: %+v",
+					res,
+					testData.expect,
+				)
+			}
+		})
+	}
+}
+
+func TestTagDBGetTagById(t *testing.T) {
+	testMap := map[string]struct {
+		shouldErr bool
+		input     int
+		expect    tags.Tag
+		expectErr string
+	}{
+		"tag exists": {
+			false,
+			1,
+			tags.Tag{
+				Id:          1,
+				Name:        "foo",
+				Description: "a foo",
+			},
+			"",
+		},
+		"tag doesn't exist": {
+			true,
+			2,
+			tags.Tag{},
+			"tag does not exist with id: 2",
+		},
+	}
+
+	for testName, testData := range testMap {
+		t.Run(testName, func(t *testing.T) {
+			testDB, teardown := setupDB(t, []string{"fixtures/get_tag_by_id.yml"})
+			defer teardown()
+
+			res, err := testDB.GetTagById(context.Background(), testData.input)
+
+			if err == nil && testData.shouldErr {
+				t.Fatal("Expected error but got no error")
+			}
+
+			if err != nil && !testData.shouldErr {
+				t.Fatalf("Expected no error but got: %s", err.Error())
+			}
+
+			if err != nil && err.Error() != testData.expectErr {
+				t.Fatalf(
+					"Expected error: %s but got: %s",
+					testData.expectErr,
+					err.Error(),
+				)
 			}
 
 			if !reflect.DeepEqual(res, testData.expect) {

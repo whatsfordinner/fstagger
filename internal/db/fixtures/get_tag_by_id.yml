@@ -1,0 +1,6 @@
+# get_tag_by_id.yml
+tags:
+  - id: 1
+    name: foo
+    description: a foo
+

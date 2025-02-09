@@ -16,7 +16,7 @@ func TestTagDBInit(t *testing.T) {
 		errString     string
 	}{
 		"valid configuration": {
-			migrationsDir: "migrations_test",
+			migrationsDir: "fixtures/migrations",
 			shouldErr:     false,
 			errString:     "",
 		},

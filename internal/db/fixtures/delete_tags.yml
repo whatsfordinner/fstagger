@@ -1,0 +1,11 @@
+# deleta_tags.yml
+tags:
+  - id: 1
+    name: foo
+    description: a foo
+  - id: 2
+    name: bar
+    description: a bar
+  - id: 3
+    name: baz
+    description: a baz

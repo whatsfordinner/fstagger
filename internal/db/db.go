@@ -44,6 +44,8 @@ func New(options ...func(*TagDB)) *TagDB {
 		o(tagDB)
 	}
 
+	tagDB.connectionString = tagDB.connectionString + "?_foreign_keys=true"
+
 	return tagDB
 }
 
