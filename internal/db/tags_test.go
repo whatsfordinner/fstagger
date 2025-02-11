@@ -302,7 +302,218 @@ func TestTagDBDeleteTags(t *testing.T) {
 	}
 }
 
-func TestTagDBUpdateTags(t *testing.T) { t.Fatal("test not implemented") }
+func TestTagDBUpdateTags(t *testing.T) {
+	testMap := map[string]struct {
+		shouldErr bool
+		input     []tags.Tag
+		expect    []tags.Tag
+		expectDB  []tags.Tag
+	}{
+		"no updates": {
+			false,
+			[]tags.Tag{},
+			[]tags.Tag{},
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "foo",
+					Description: "a foo",
+				},
+				{
+					Id:          2,
+					Name:        "bar",
+					Description: "a bar",
+				},
+			},
+		},
+		"one valid update": {
+			false,
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "baz",
+					Description: "a baz",
+				},
+			},
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "baz",
+					Description: "a baz",
+				},
+			},
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "baz",
+					Description: "a baz",
+				},
+				{
+					Id:          2,
+					Name:        "bar",
+					Description: "a bar",
+				},
+			},
+		},
+		"multiple valid updates": {
+			false,
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "baz",
+					Description: "a baz",
+				},
+				{
+					Id:          2,
+					Name:        "qux",
+					Description: "a qux",
+				},
+			},
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "baz",
+					Description: "a baz",
+				},
+				{
+					Id:          2,
+					Name:        "qux",
+					Description: "a qux",
+				},
+			},
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "baz",
+					Description: "a baz",
+				},
+				{
+					Id:          2,
+					Name:        "qux",
+					Description: "a qux",
+				},
+			},
+		},
+		"tag ID doesn't exist": {
+			true,
+			[]tags.Tag{
+				{
+					Id:          3,
+					Name:        "baz",
+					Description: "a baz",
+				},
+			},
+			[]tags.Tag{},
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "foo",
+					Description: "a foo",
+				},
+				{
+					Id:          2,
+					Name:        "bar",
+					Description: "a bar",
+				},
+			},
+		},
+		"tag with same name already exists": {
+			true,
+			[]tags.Tag{
+				{
+					Id:          2,
+					Name:        "foo",
+					Description: "a foo",
+				},
+			},
+			[]tags.Tag{},
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "foo",
+					Description: "a foo",
+				},
+				{
+					Id:          2,
+					Name:        "bar",
+					Description: "a bar",
+				},
+			},
+		},
+		"one valid, one invalid update": {
+			true,
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "baz",
+					Description: "a baz",
+				},
+				{
+					Id:          3,
+					Name:        "qux",
+					Description: "a qux",
+				},
+			},
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "baz",
+					Description: "a baz",
+				},
+			},
+			[]tags.Tag{
+				{
+					Id:          1,
+					Name:        "baz",
+					Description: "a baz",
+				},
+				{
+					Id:          2,
+					Name:        "bar",
+					Description: "a bar",
+				},
+			},
+		},
+	}
+
+	for testName, testData := range testMap {
+		t.Run(testName, func(t *testing.T) {
+			testDB, teardown := setupDB(t, []string{"fixtures/update_tags.yml"})
+			defer teardown()
+
+			res, err := testDB.UpdateTags(context.Background(), testData.input)
+
+			if err == nil && testData.shouldErr {
+				t.Fatal("Expected error but got no error")
+			}
+
+			if err != nil && !testData.shouldErr {
+				t.Fatalf("Expected no error but got: %s", err.Error())
+			}
+
+			if !reflect.DeepEqual(res, testData.expect) {
+				t.Fatalf(
+					"Result did not match expectation\nResult: %+v\nExpected: %+v",
+					res,
+					testData.expect,
+				)
+			}
+
+			dbRes, err := testDB.GetTags(context.Background())
+			if err != nil {
+				t.Fatalf("Error retrieving tags in DB: %s", err.Error())
+			}
+
+			if !reflect.DeepEqual(dbRes, testData.expectDB) {
+				t.Fatalf(
+					"DB contents did not match expectation\nResult: %+v\nExpected: %+v",
+					res,
+					testData.expectDB,
+				)
+			}
+		})
+	}
+}
 
 func TestTagDBGetTags(t *testing.T) {
 	testMap := map[string]struct {

@@ -36,6 +36,7 @@ func (tagDB *TagDB) AddTags(ctx context.Context, newTags []tags.Tag) ([]tags.Tag
 		tagNamesToAdd = append(tagNamesToAdd, tag.Name)
 		res, err := tagDB.GetTagsByName(ctx, tag.Name)
 		if err != nil {
+			// TODO: this should add an error to a slice and continue rather than bail
 			span.SetStatus(codes.Error, err.Error())
 			return nil, err
 		}
@@ -114,12 +115,13 @@ func (tagDB *TagDB) DeleteTags(ctx context.Context, deleteTags []tags.Tag) error
 // UpdateTags takes a slice of tags and updates the tags with matching IDs. If a
 // tag with a provided ID doesn't exist then it will update what it can and
 // return an error.
-func (tagDB *TagDB) UpdateTags(ctx context.Context, updateTags []tags.Tag) error {
+func (tagDB *TagDB) UpdateTags(ctx context.Context, updateTags []tags.Tag) ([]tags.Tag, error) {
 	ctx, span := tracer.Start(ctx, "UpdateTags")
 	defer span.End()
 
 	queryString := "UPDATE tags SET name = ?, description = ? WHERE id = ?"
 	queryErrors := []error{}
+	updatedTags := []tags.Tag{}
 
 	span.SetAttributes(
 		attribute.String("db.file", tagDB.connectionString),
@@ -143,16 +145,18 @@ func (tagDB *TagDB) UpdateTags(ctx context.Context, updateTags []tags.Tag) error
 			queryErrors = append(queryErrors, err)
 			continue
 		}
+
+		updatedTags = append(updatedTags, tag)
 	}
 
 	if len(queryErrors) > 0 {
 		returnErr := errors.Join(queryErrors...)
 		span.SetStatus(codes.Error, returnErr.Error())
-		return returnErr
+		return updatedTags, returnErr
 	}
 
 	span.SetStatus(codes.Ok, "")
-	return nil
+	return updatedTags, nil
 }
 
 // GetTags returns a slice of all tags being tracked. There's no pagination on
