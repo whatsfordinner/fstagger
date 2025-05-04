@@ -12,6 +12,18 @@ To Do
 * Need to make sure the tag is in the DB -> Search by tag name and add it if it isn't
 * File and tag relationship should be unique in DB -> Table constraint
 
+# Required functionality
+
+* Adding a file to the DB
+    * Finding the absolute path to the file
+    * Getting a hash of the file
+    * Writing the file to the `files` table in the DB
+* Finding if a tag already exists in the DB
+    * Search DB for a tag with the same name as provided
+* Adding a tag to the DB if it doesn't already exist
+    * Should eventually be able to add a description for a new tag
+* Linking a tag to a file
+
 # Examples
 
 ```shell
