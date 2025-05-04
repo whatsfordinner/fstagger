@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 
+	"github.com/XSAM/otelsql"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pressly/goose/v3"
 	"go.opentelemetry.io/otel"
@@ -83,7 +84,7 @@ func (tagDB *TagDB) Init(ctx context.Context) error {
 	ctx, span := tracer.Start(ctx, "Init")
 	defer span.End()
 
-	db, err := sql.Open("sqlite3", tagDB.connectionString)
+	db, err := otelsql.Open("sqlite3", tagDB.connectionString)
 	if err != nil {
 		span.SetStatus(
 			codes.Error,
