@@ -3,6 +3,8 @@ package db
 import (
 	"context"
 	"testing"
+
+	"github.com/go-testfixtures/testfixtures/v3"
 )
 
 // TestTagDBInit does NOT test production functionality of migrations. It only
@@ -87,5 +89,31 @@ func TestTagDBClose(t *testing.T) {
 
 			testDB.Close(context.Background())
 		})
+	}
+}
+
+func setupDB(t *testing.T, fixtureFiles []string) (*TagDB, func()) {
+	testDB := New()
+	if err := testDB.Init(context.Background()); err != nil {
+		t.Fatalf("Unable to init test DB: %s", err.Error())
+	}
+
+	fixtures, err := testfixtures.New(
+		testfixtures.Database(testDB.client),
+		testfixtures.Dialect("sqlite3"),
+		testfixtures.FilesMultiTables(fixtureFiles...),
+		testfixtures.DangerousSkipTestDatabaseCheck(),
+	)
+
+	if err != nil {
+		t.Fatalf("Unable to create fixture manager: %s", err.Error())
+	}
+
+	if err := fixtures.Load(); err != nil {
+		t.Fatalf("Unable to prep database: %s", err.Error())
+	}
+
+	return testDB, func() {
+		testDB.Close(context.Background())
 	}
 }
