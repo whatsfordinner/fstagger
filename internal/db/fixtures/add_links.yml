@@ -1,0 +1,18 @@
+# add_links.yml
+files:
+  - id: 1
+    path: /path/to/foo
+    hash: foohash
+  - id: 2
+    path: /path/to/bar
+    hash: barhash
+tags:
+  - id: 1
+    name: foo
+    description: a foo
+  - id: 2
+    name: bar
+    description: a bar
+filetags:
+  - fileid: 1
+    tagid: 1

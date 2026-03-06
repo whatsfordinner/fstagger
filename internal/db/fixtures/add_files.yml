@@ -1,0 +1,5 @@
+# add_files.yml
+files:
+  - id: 1
+    path: /path/to/foo
+    hash: foohash

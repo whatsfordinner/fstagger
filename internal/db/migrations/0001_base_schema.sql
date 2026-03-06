@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS filetags(
 	tagid INTEGER NOT NULL,
 	FOREIGN KEY(fileid) REFERENCES files(id) ON DELETE CASCADE,
 	FOREIGN KEY(tagid) REFERENCES tags(id) ON DELETE CASCADE
+	PRIMARY KEY(fileid, tagid)
 );
 
 -- +goose Down
